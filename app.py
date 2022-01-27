@@ -24,5 +24,7 @@ def redirect_to_survey():
 
 
 @app.get('/questions/<int:question_id>')
-def ask_question():
+def ask_question(question_id):
     """asks a survey question"""
+    current_question = survey.questions[question_id]
+    return render_template("question.html", question=current_question)
