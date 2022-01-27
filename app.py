@@ -4,52 +4,56 @@ from markupsafe import re
 from surveys import satisfaction_survey as survey
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = "never-tell!"
-app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
+app.config["SECRET_KEY"] = "never-tell!"
+app.config["DEBUG_TB_INTERCEPT_REDIRECTS"] = False
 
 debug = DebugToolbarExtension(app)
 
 responses = []
 
 
-@app.get('/')
+@app.get("/")
 def start_survey():
     """Shows start survey form"""
+    
+    session["responses"] = []
     return render_template("survey_start.html", survey=survey)
 
 
-@app.post('/begin')
+@app.post("/begin")
 def redirect_to_survey():
-    """Redirects POST request to GET survey display"""
-    return redirect('/questions/0')
+    """Redirects POST request to first question"""
+    
+    return redirect("/questions/0")
 
 
-@app.get('/questions/<int:question_id>')
+@app.get("/questions/<int:question_id>")
 def ask_question(question_id):
-    """asks a survey question"""
+    """asks a survey question and increments question id"""
+
     current_question = survey.questions[question_id]
+    next_question_id = question_id + 1
     return render_template(
-        "question.html",
-        question=current_question,
-        question_id=question_id
+        "question.html", question=current_question, question_id=next_question_id
     )
 
 
-@app.post('/answer')
+@app.post("/answer")
 def save_answer():
     """save question response to responses and if survey done,
     send user a thank you"""
-    question_id = int(request.form.get('question-id'))
 
-    responses.append(request.form.get('answer'))
+    question_id = int(request.form.get("question-id"))
+
+    responses.append(request.form.get("answer"))
 
     if question_id < len(survey.questions):
-        return redirect(f"questions/{question_id + 1}")
+        return redirect(f"questions/{question_id}")
     else:
-        return redirect('/complete')
+        return redirect("/complete")
 
 
-@app.get('/complete')
+@app.get("/complete")
 def thank_user():
     """Render post-survey message"""
 
