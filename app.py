@@ -10,27 +10,35 @@ app.config["DEBUG_TB_INTERCEPT_REDIRECTS"] = False
 debug = DebugToolbarExtension(app)
 
 
-
-
 @app.get("/")
 def start_survey():
     """Shows start survey form"""
 
     session["responses"] = []
-    
+
     return render_template("survey_start.html", survey=survey)
 
 
 @app.post("/begin")
 def redirect_to_survey():
     """Redirects POST request to first question"""
-    
+
     return redirect("/questions/0")
 
 
 @app.get("/questions/<int:question_id>")
 def ask_question(question_id):
     """asks a survey question and increments question id"""
+
+    # FIXME: add scenario conditionals for: out of bounds, out of order
+    # and already answered question
+
+    def goto_first_unanswered_question():
+        unanswered_question_id = -1
+        for response in session["responses"]:
+            unanswered_question_id += 1
+            if response is False:
+                return redirect(f"/questions/{empty_question_id}")
 
     current_question = survey.questions[question_id]
     next_question_id = question_id + 1
@@ -45,12 +53,12 @@ def save_answer():
     send user a thank you"""
 
     answer = request.form.get("answer")
-    
+
     question_id = int(request.form.get("question-id"))
     responses = session["responses"]
     responses.append(answer)
     session["responses"] = responses
-    
+
     if question_id < len(survey.questions):
         return redirect(f"questions/{question_id}")
     else:
