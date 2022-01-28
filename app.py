@@ -9,14 +9,15 @@ app.config["DEBUG_TB_INTERCEPT_REDIRECTS"] = False
 
 debug = DebugToolbarExtension(app)
 
-responses = []
+
 
 
 @app.get("/")
 def start_survey():
     """Shows start survey form"""
-    
+
     session["responses"] = []
+    
     return render_template("survey_start.html", survey=survey)
 
 
@@ -43,10 +44,13 @@ def save_answer():
     """save question response to responses and if survey done,
     send user a thank you"""
 
+    answer = request.form.get("answer")
+    
     question_id = int(request.form.get("question-id"))
-
-    responses.append(request.form.get("answer"))
-
+    responses = session["responses"]
+    responses.append(answer)
+    session["responses"] = responses
+    
     if question_id < len(survey.questions):
         return redirect(f"questions/{question_id}")
     else:
@@ -56,5 +60,6 @@ def save_answer():
 @app.get("/complete")
 def thank_user():
     """Render post-survey message"""
-
+    responses = session["responses"]
+    print(f"responses in complete: {responses}")
     return render_template("completion.html")
